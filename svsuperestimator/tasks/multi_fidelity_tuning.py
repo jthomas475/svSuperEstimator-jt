@@ -34,7 +34,7 @@ class MultiFidelityTuning(Task):
         "lsq_initial_damping_factor": 1.0,
         "lsq_maximum_iterations": 100,
         "svpre_executable": None,
-        "svsolver_executable": None,
+        "svmultiphysics_executable": None,
         "svpost_executable": None,
         "svslicer_executable": None,
         WindkesselTuning.TASKNAME: {},
@@ -70,7 +70,7 @@ class MultiFidelityTuning(Task):
                 f"{self.config['three_d_theta_source']}"
             )
 
-        for i in range(2):
+        for i in range(2): #Question: number of optimization steps?
             windkessel_task = WindkesselTuning(
                 project=self.project,
                 config={
@@ -133,7 +133,7 @@ class MultiFidelityTuning(Task):
                     ],
                     "time_step_size": self.config["three_d_time_step_size"],
                     "svpre_executable": self.config["svpre_executable"],
-                    "svsolver_executable": self.config["svsolver_executable"],
+                    "svmultiphysics_executable": self.config["svmultiphysics_executable"],
                     "svpost_executable": self.config["svpost_executable"],
                     "svslicer_executable": self.config["svslicer_executable"],
                     **global_config,

@@ -46,7 +46,7 @@ class WindkesselTuning(Task):
         **Task.DEFAULTS,
     }
 
-    _THETA_RANGE = (7.0, 13.0)
+    _THETA_RANGE = (7.0, 13.0) # Question: Seems aribitrary, where in the paper validates this choice?sh
 
     def core_run(self) -> None:
         """Core routine of the task."""
@@ -138,7 +138,10 @@ class WindkesselTuning(Task):
 
         max_post = statutils.particle_map(
             particles=particles, posterior=log_post
-        )
+        ) 
+        # these are the alphas 
+        # (difference between low and high fidelity are the values you're able to optimize)
+        # Run the exact same zero d simulations
         map_error = [abs(m - gt) / gt for m, gt in zip(max_post, ground_truth)]
         results["metrics"] = {
             "ground_truth": ground_truth,
@@ -215,7 +218,7 @@ class WindkesselTuning(Task):
             ki = np.exp(max_post[i])
             bc["bc_values"]["Rp"] = ki / (1.0 + distal_to_proximals[i])
             bc["bc_values"]["Rd"] = ki - bc["bc_values"]["Rp"]
-            bc["bc_values"]["C"] = time_constants[i] / bc["bc_values"]["Rd"]
+            bc["bc_values"]["C"] = time_constants[i] / bc["bc_values"]["Rd"] # Augement this to form low/high fidelity
         zerod_config_handler.to_file(
             os.path.join(self.output_folder, "solver_0d_map.in")
         )

@@ -1,10 +1,12 @@
 """Main routine of svSuperEstimator."""
 
+
 import os
 import platform
 import sys
 from copy import deepcopy
 from time import time
+import json #was just trying out stuff, not sure if this is necessary
 
 import click
 import yaml
@@ -65,14 +67,10 @@ slurm_base_expanse = """#!/bin/bash
 #SBATCH --ntasks-per-node={ntasks_per_node}
 
 module purge
-module load cpu/0.15.4
-module load shared
-module load slurm
-module load sdsc
-module load gcc/9.2.0
-module load cmake/3.18.2
-module load openmpi
-export SLURM_MPI_TYPE=pmi2
+NTASKS=2
+FOLDER_TO_BIND1=/home/jt2332/test/pipe_RCR_3d # path to folder to bind to the container (it will be accessible to the container)
+#FOLDER_TO_BIND2 = # path to folder to bind to the container (it will be accessible to the container)
+PATH_TO_IMAGE=/home/jt2332/test/solver_latest.sif # full path to image, including the image name (*.sif file)
 
 # Command
 echo "$(date): Job $SLURM_JOBID starting on $SLURM_NODELIST"
@@ -84,9 +82,9 @@ slurm_default = {
     "partition": "normal",
     "walltime": "48:00:00",
     "qos": "normal",
-    "nodes": 2,
+    "nodes": 1,
     "mem": "16GB",
-    "ntasks-per-node": 24,
+    "ntasks-per-node": 2,
     "python-path": None,
     "account": None,
 }

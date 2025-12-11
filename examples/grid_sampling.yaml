@@ -1,6 +1,6 @@
 project: /Volumes/richter/final_data/projects/0104_0001
 global: 
-  num_procs: 12
+  num_procs: 12 # number of cores
   overwrite: True
 tasks:
   grid_sampling:
@@ -11,3 +11,4 @@ tasks:
     noise_factor: 0.3
     # pressure, max/mean min/mean t_max/nt t_min/nt
     y_obs: [9.32312464e+04, 1.77669235e+05, 7.44259475e+00, 3.38493067e+01, 6.52259072e+00, 2.25376025e+00, 6.43813231e+00]
+    temporary_output_folder: ./Oct_1_grid_test_output.json #added in order for estimate of this .yaml to run

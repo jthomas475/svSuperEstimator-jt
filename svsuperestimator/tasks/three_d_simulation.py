@@ -34,17 +34,13 @@ class AdaptiveThreeDSimulation(Task):
         "max_cardiac_cycles": 10,
         "time_step_size": "auto",
         "zerod_config_file": None,
-        "svpre_executable": None,
-        "svsolver_executable": None,
-        "svpost_executable": None,
+        "svmultiphysics_executable": None,
         "svslicer_executable": None,
         **Task.DEFAULTS,
     }
 
     MUST_EXIST_AT_INIT = [
-        "svpre_executable",
-        "svsolver_executable",
-        "svpost_executable",
+        "svmultiphysics_executable",
         "svslicer_executable",
     ]
 
@@ -59,9 +55,6 @@ class AdaptiveThreeDSimulation(Task):
 
         # Setup all input files
         self._setup_input_files()
-
-        # Preprocess the input files
-        self._run_preprocessor()
 
         simulated_steps = 0
         self.database["asymptotic_errors"] = []
@@ -83,12 +76,6 @@ class AdaptiveThreeDSimulation(Task):
             # Run the postprocessing
             three_d_result_file = os.path.join(
                 self.output_folder, f"result_cycle_{i_cardiac_cycle}.vtu"
-            )
-            self._run_postprocessor(
-                start_step,
-                end_step,
-                f"../result_cycle_{i_cardiac_cycle}.vtu",
-                int(self._steps_per_cycle / 100),
             )
 
             # Map the postprocessed results to the centerline
@@ -272,11 +259,6 @@ class AdaptiveThreeDSimulation(Task):
             os.path.join(self.output_folder, "solver.inp")
         )
 
-        self.log(f"Collect {self.project.name}.svpre")
-        source = os.path.join(sim_folder_path, f"{self.project.name}.svpre")
-        target = os.path.join(self.output_folder, f"{self.project.name}.svpre")
-        copy2(source, target)
-
         self.log("Collect rcrt.dat")
         target = os.path.join(self.output_folder, "rcrt.dat")
         copy2(self.config["rcrt_dat_path"], target)
@@ -287,60 +269,19 @@ class AdaptiveThreeDSimulation(Task):
         )
         copy2(self.config["initial_vtu_path"], target)
 
-    def _run_preprocessor(self) -> None:
-        """Run svPre."""
-        self.log("Running preprocessor")
-        run_subprocess(
-            [
-                self.config["svpre_executable"],
-                f"{self.project.name}.svpre",
-            ],
-            logger=self.log,
-            logprefix=r"\[svpre]: ",
-            cwd=self.output_folder,
-        )
-
     def _run_solver(self) -> None:
         """Run the 3D fluid dynamics simulation using svSolver."""
         self.log(f"Running solver for {self._steps_per_cycle} time steps")
         run_subprocess(
             [
-                "UCX_POSIX_USE_PROC_LINK=n srun",
-                self.config["svsolver_executable"],
-                "solver.inp",
+                "singularity run --bind $FOLDER_TO_BIND1 $PATH_TO_IMAGE mpirun -n $NTASKS",
+                self.config["svmultiphysics_executable"],
+                "/home/jt2332/test/pipe_RCR_3d/solver.xml",
             ],
             logger=self.log,
             logprefix=r"\[svsolver]: ",
             cwd=self.output_folder,
         )
-
-    def _run_postprocessor(
-        self,
-        start_step: int,
-        stop_step: int,
-        output_file: str,
-        interval: int = 5,
-    ) -> None:
-        """Postprocess the raw output files to a single vtu file."""
-        self.log(
-            f"Postprocessing steps {start_step} to {stop_step} "
-            f"(interval {interval})"
-        )
-        run_subprocess(
-            [
-                self.config["svpost_executable"],
-                f"-start {start_step}",
-                f"-stop {stop_step}",
-                f"-incr {interval}",
-                "-sol -vtkcombo",
-                f"-vtu {output_file}",
-            ],
-            logger=self.log,
-            logprefix=r"\[svpost]: ",
-            cwd=self._solver_output_folder,
-        )
-        self.log(f"Saved postprocessed output file: {output_file}")
-        self.log("Completed postprocessing")
 
     def _run_slicer(
         self, three_d_result_file: str, centerline_result_file: str
