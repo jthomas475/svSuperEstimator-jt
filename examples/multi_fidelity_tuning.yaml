@@ -1,4 +1,4 @@
-project: /Users/stanford/Downloads/0104_0001
+project: 0069_0001
 global:
     num_procs: 2
 slurm:
